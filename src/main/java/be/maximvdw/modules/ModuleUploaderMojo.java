@@ -5,9 +5,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-@Mojo( name = "upload")
-public class ModuleUploaderMojo extends AbstractMojo
-{
+@Mojo(name = "update")
+public class ModuleUploaderMojo extends AbstractMojo {
 
     /**
      * URL of the Modules API
@@ -22,14 +21,28 @@ public class ModuleUploaderMojo extends AbstractMojo
     @Parameter(property = "accessToken", required = true)
     String accessToken;
 
+    @Parameter(property = "projectId", required = true)
+    int projectId;
+
     @Parameter(property = "moduleName", required = true)
     String moduleName;
+
+    @Parameter(property = "moduleAuthor", required = true)
+    String moduleAuthor;
+
+    @Parameter(property = "moduleDescription", required = true)
+    String moduleDescription;
 
     @Parameter(property = "moduleVersion", required = true)
     String moduleVersion;
 
-    public void execute() throws MojoExecutionException
-    {
-        getLog().info( "Hello, world." + urlApi + " " + accessToken );
+    public void execute() throws MojoExecutionException {
+        getLog().info("MVdW-Software Module Uploader");
+        getLog().info("Using API: " + urlApi);
+        getLog().info("Project ID: " + projectId);
+        getLog().info("Module name: " + moduleName);
+        getLog().info("Module author: " + moduleAuthor);
+        getLog().info("Module description: " + moduleDescription);
+        getLog().info("Module version: " + moduleVersion);
     }
 }
