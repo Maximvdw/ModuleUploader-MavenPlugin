@@ -96,16 +96,8 @@ public class HttpRequest {
                 con.setRequestProperty(header.getKey(), header.getValue());
             }
 
-            if (!postBody.equals("")) {
-                // Send post request
-                final BufferedOutputStream outputStream = new BufferedOutputStream(con.getOutputStream());
-                writeAll(postBody, outputStream, Charset.defaultCharset());
-                outputStream.close();
-            }
             if (this.uploadFile != null) {
-                con.setUseCaches(false);
                 con.setRequestProperty("Connection", "Keep-Alive");
-                con.setRequestProperty("Cache-Control", "no-cache");
                 con.setRequestProperty(
                         "Content-Type", "multipart/form-data;boundary=*****");
 
@@ -122,8 +114,14 @@ public class HttpRequest {
                 request.write(data);
                 request.writeBytes("\r\n");
                 request.writeBytes("--*****--\r\n");
+                request.writeUTF(postBody);
                 request.flush();
                 request.close();
+            } else if (!postBody.equals("")) {
+                // Send post request
+                final BufferedOutputStream outputStream = new BufferedOutputStream(con.getOutputStream());
+                writeAll(postBody, outputStream, Charset.defaultCharset());
+                outputStream.close();
             }
 
             InputStream inputStream = new BufferedInputStream(con.getInputStream());
