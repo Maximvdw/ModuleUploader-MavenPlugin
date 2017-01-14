@@ -114,7 +114,17 @@ public class HttpRequest {
                 request.write(data);
                 request.writeBytes("\r\n");
                 request.writeBytes("--*****--\r\n");
-                request.writeUTF(postBody);
+
+                if (!postBody.equals("")) {
+                    for (Map.Entry<String,String> entry : postData.entrySet()) {
+                        request.writeBytes("--*****\r\n");
+                        request.writeBytes("Content-Disposition: form-data; name=\"" +
+                                entry.getKey()+ "\"\r\n");
+                        request.writeUTF(entry.getValue());
+                        request.writeBytes("\r\n");
+                        request.writeBytes("--*****--\r\n");
+                    }
+                }
                 request.flush();
                 request.close();
             } else if (!postBody.equals("")) {
