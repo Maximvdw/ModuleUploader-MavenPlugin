@@ -119,7 +119,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
             HttpResponse response = new HttpRequest(url)
                     .post("version", moduleVersion)
                     .authorization(accessToken)
-                    .withFile("module", file)
+                    .withFile("file", file)
                     .method(HttpMethod.POST)
                     .execute();
             JSONParser parser = new JSONParser();

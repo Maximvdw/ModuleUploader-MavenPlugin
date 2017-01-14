@@ -94,28 +94,32 @@ public class HttpRequest {
             }
 
             if (this.uploadFile != null){
-                con.setUseCaches(false);
-                con.setDoOutput(true);
-                con.setRequestProperty("Connection", "Keep-Alive");
-                con.setRequestProperty("Cache-Control", "no-cache");
-                con.setRequestProperty(
-                        "Content-Type", "multipart/form-data;boundary=*****");
+                try {
+                    con.setUseCaches(false);
+                    con.setDoOutput(true);
+                    con.setRequestProperty("Connection", "Keep-Alive");
+                    con.setRequestProperty("Cache-Control", "no-cache");
+                    con.setRequestProperty(
+                            "Content-Type", "multipart/form-data;boundary=*****");
 
-                DataOutputStream request = new DataOutputStream(
-                        con.getOutputStream());
+                    DataOutputStream request = new DataOutputStream(
+                            con.getOutputStream());
 
-                request.writeBytes("--*****\r\n");
-                request.writeBytes("Content-Disposition: form-data; name=\"" +
-                        this.getUploadFileName() + "\";filename=\"" +
-                        this.getUploadFile().getName() + "\"\r\n");
-                request.writeBytes("\r\n");
-                Path path = Paths.get(getUploadFile().getAbsolutePath());
-                byte[] data = Files.readAllBytes(path);
-                request.write(data);
-                request.writeBytes("\r\n");
-                request.writeBytes("--*****--\r\n");
-                request.flush();
-                request.close();
+                    request.writeBytes("--*****\r\n");
+                    request.writeBytes("Content-Disposition: form-data; name=\"" +
+                            this.getUploadFileName() + "\";filename=\"" +
+                            this.getUploadFile().getName() + "\"\r\n");
+                    request.writeBytes("\r\n");
+                    Path path = Paths.get(getUploadFile().getAbsolutePath());
+                    byte[] data = Files.readAllBytes(path);
+                    request.write(data);
+                    request.writeBytes("\r\n");
+                    request.writeBytes("--*****--\r\n");
+                    request.flush();
+                    request.close();
+                }catch (Exception ex){
+                    ex.printStackTrace();
+                }
             }
             if (!postBody.equals("")) {
                 con.setDoOutput(true);
