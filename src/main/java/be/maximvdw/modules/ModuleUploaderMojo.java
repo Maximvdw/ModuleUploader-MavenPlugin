@@ -1,9 +1,18 @@
 package be.maximvdw.modules;
 
+import be.maximvdw.modules.http.HttpMethod;
+import be.maximvdw.modules.http.HttpRequest;
+import be.maximvdw.modules.http.HttpResponse;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import java.io.File;
+import java.net.URLEncoder;
 
 @Mojo(name = "update")
 public class ModuleUploaderMojo extends AbstractMojo {
@@ -13,7 +22,6 @@ public class ModuleUploaderMojo extends AbstractMojo {
      */
     @Parameter(property = "urlApi", required = false, defaultValue = "http://modules.mvdw-software.com/api/v1")
     String urlApi;
-
 
     /**
      * Access token of the project or module
@@ -36,6 +44,12 @@ public class ModuleUploaderMojo extends AbstractMojo {
     @Parameter(property = "moduleVersion", required = true)
     String moduleVersion;
 
+    /**
+     * Project Artifact.
+     */
+    @Parameter(defaultValue = "${project.artifact}", readonly = true, required = true)
+    private Artifact artifact;
+
     public void execute() throws MojoExecutionException {
         getLog().info("MVdW-Software Module Uploader");
         getLog().info("Using API: " + urlApi);
@@ -44,5 +58,53 @@ public class ModuleUploaderMojo extends AbstractMojo {
         getLog().info("Module author: " + moduleAuthor);
         getLog().info("Module description: " + moduleDescription);
         getLog().info("Module version: " + moduleVersion);
+
+        getLog().info("Getting module id from name ...");
+        int moduleId = getModuleId();
+        if (moduleId == -1) {
+            getLog().info("Creating a new module!");
+            moduleId = createModule();
+        }
+        getLog().info("Module id: " + moduleId);
+
+        File projectFile = artifact.getFile();
+
+    }
+
+    public int getModuleId() {
+        try {
+            String url = urlApi + "/modules/" + projectId + "/fromName/" + URLEncoder.encode(moduleName, "UTF-8");
+            HttpResponse response = new HttpRequest(url)
+                    .execute();
+            JSONParser parser = new JSONParser();
+            JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
+            if (responseJson.containsKey("module")){
+                return (int) ((JSONObject)responseJson.get("module")).get("id");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return -1;
+    }
+
+    public int createModule() {
+        try {
+            String url = urlApi + "/modules/" + projectId + "/create";
+            HttpResponse response = new HttpRequest(url)
+                    .post("name", moduleName)
+                    .post("author", moduleAuthor)
+                    .post("description", moduleDescription)
+                    .authorization(accessToken)
+                    .method(HttpMethod.POST)
+                    .execute();
+            JSONParser parser = new JSONParser();
+            JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
+            if (responseJson.containsKey("module")){
+                return (int) ((JSONObject)responseJson.get("module")).get("id");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return -1;
     }
 }
