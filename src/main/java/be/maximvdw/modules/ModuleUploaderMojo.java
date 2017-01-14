@@ -60,7 +60,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
         getLog().info("Module version: " + moduleVersion);
 
         getLog().info("Getting module id from name ...");
-        int moduleId = getModuleId();
+        long moduleId = getModuleId();
         if (moduleId == -1) {
             getLog().info("Creating a new module!");
             moduleId = createModule();
@@ -68,10 +68,12 @@ public class ModuleUploaderMojo extends AbstractMojo {
         getLog().info("Module id: " + moduleId);
 
         File projectFile = artifact.getFile();
-
+        if (uploadFile(moduleId,projectFile)){
+            getLog().info("Module upload success!");
+        }
     }
 
-    public int getModuleId() {
+    public Long getModuleId() {
         try {
             String url = urlApi + "/module/" + projectId + "/fromName/" + URLEncoder.encode(moduleName, "UTF-8");
             getLog().debug("Sending GET request to: " + url);
@@ -80,15 +82,15 @@ public class ModuleUploaderMojo extends AbstractMojo {
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
             if (responseJson.containsKey("module")) {
-                return (int) ((JSONObject) responseJson.get("module")).get("id");
+                return (Long) ((JSONObject) responseJson.get("module")).get("id");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return -1;
+        return -1L;
     }
 
-    public int createModule() {
+    public Long createModule() {
         try {
             String url = urlApi + "/module/" + projectId + "/create";
             getLog().debug("Sending POST request to: " + url);
@@ -102,11 +104,31 @@ public class ModuleUploaderMojo extends AbstractMojo {
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
             if (responseJson.containsKey("module")) {
-                return (int) ((JSONObject) responseJson.get("module")).get("id");
+                return (Long) ((JSONObject) responseJson.get("module")).get("id");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return -1;
+        return -1L;
     }
+
+    public boolean uploadFile(long moduleId, File file) {
+        try {
+            String url = urlApi + "/module/" + projectId + "/" + moduleId + "/upload";
+            getLog().debug("Sending POST request to: " + url);
+            HttpResponse response = new HttpRequest(url)
+                    .post("version", moduleVersion)
+                    .authorization(accessToken)
+                    .withFile("module", file)
+                    .method(HttpMethod.POST)
+                    .execute();
+            JSONParser parser = new JSONParser();
+            JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
 }

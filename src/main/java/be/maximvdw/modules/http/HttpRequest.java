@@ -20,6 +20,8 @@ public class HttpRequest {
     private Map<String, String> postData = new HashMap<>();
     private String postBody = "";
     private Map<String, String> headers = new HashMap<>();
+    private String uploadFileName = "";
+    private File uploadFile = null;
 
     public HttpRequest(String url) throws MalformedURLException {
         this.url = new URL(url);
@@ -63,6 +65,12 @@ public class HttpRequest {
         return this;
     }
 
+    public HttpRequest withFile(String name,File file){
+        this.uploadFile = file;
+        this.uploadFileName = name;
+        return this;
+    }
+
     public HttpResponse execute() throws IOException {
         HttpURLConnection con = null;
         try {
@@ -85,6 +93,21 @@ public class HttpRequest {
                 final BufferedOutputStream outputStream = new BufferedOutputStream(con.getOutputStream());
                 writeAll(postBody, outputStream, Charset.defaultCharset());
                 outputStream.close();
+            }
+            if (this.uploadFile != null){
+                con.setRequestProperty("Connection", "Keep-Alive");
+                con.setRequestProperty("Cache-Control", "no-cache");
+                con.setRequestProperty(
+                        "Content-Type", "multipart/form-data;boundary=*****");
+
+                DataOutputStream request = new DataOutputStream(
+                        con.getOutputStream());
+
+                request.writeBytes("--*****\r\n");
+                request.writeBytes("Content-Disposition: form-data; name=\"" +
+                        this.getUploadFileName() + "\";filename=\"" +
+                        this.getUploadFile().getName() + "\"\r\n");
+                request.writeBytes("\r\n");
             }
 
             InputStream inputStream = new BufferedInputStream(con.getInputStream());
@@ -176,5 +199,21 @@ public class HttpRequest {
         }
 
         return result;
+    }
+
+    public File getUploadFile() {
+        return uploadFile;
+    }
+
+    public void setUploadFile(File uploadFile) {
+        this.uploadFile = uploadFile;
+    }
+
+    public String getUploadFileName() {
+        return uploadFileName;
+    }
+
+    public void setUploadFileName(String uploadFileName) {
+        this.uploadFileName = uploadFileName;
     }
 }
