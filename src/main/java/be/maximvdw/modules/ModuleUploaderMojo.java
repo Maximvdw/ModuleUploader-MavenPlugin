@@ -73,7 +73,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
     public int getModuleId() {
         try {
-            String url = urlApi + "/modules/" + projectId + "/fromName/" + URLEncoder.encode(moduleName, "UTF-8");
+            String url = urlApi + "/module/" + projectId + "/fromName/" + URLEncoder.encode(moduleName, "UTF-8");
             getLog().debug("Sending GET request to: " + url);
             HttpResponse response = new HttpRequest(url)
                     .execute();
@@ -90,7 +90,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
     public int createModule() {
         try {
-            String url = urlApi + "/modules/" + projectId + "/create";
+            String url = urlApi + "/module/" + projectId + "/create";
             getLog().debug("Sending POST request to: " + url);
             HttpResponse response = new HttpRequest(url)
                     .post("name", moduleName)
