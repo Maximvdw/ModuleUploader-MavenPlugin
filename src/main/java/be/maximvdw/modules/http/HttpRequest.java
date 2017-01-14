@@ -74,6 +74,13 @@ public class HttpRequest {
     public HttpResponse execute() throws IOException {
         HttpURLConnection con = null;
         try {
+            if (this.uploadFile != null) {
+                con.setRequestProperty("Connection", "Keep-Alive");
+                con.setRequestProperty("Cache-Control", "no-cache");
+                con.setRequestProperty(
+                        "Content-Type", "multipart/form-data;boundary=*****");
+            }
+
             if (url.getProtocol().toLowerCase().equals("https")) {
                 con = (HttpsURLConnection) url.openConnection();
             } else {
@@ -87,19 +94,7 @@ public class HttpRequest {
                 con.setRequestProperty(header.getKey(), header.getValue());
             }
 
-            if (!postBody.equals("")) {
-                con.setDoOutput(true);
-                // Send post request
-                final BufferedOutputStream outputStream = new BufferedOutputStream(con.getOutputStream());
-                writeAll(postBody, outputStream, Charset.defaultCharset());
-                outputStream.close();
-            }
             if (this.uploadFile != null){
-                con.setRequestProperty("Connection", "Keep-Alive");
-                con.setRequestProperty("Cache-Control", "no-cache");
-                con.setRequestProperty(
-                        "Content-Type", "multipart/form-data;boundary=*****");
-
                 DataOutputStream request = new DataOutputStream(
                         con.getOutputStream());
 
@@ -108,6 +103,14 @@ public class HttpRequest {
                         this.getUploadFileName() + "\";filename=\"" +
                         this.getUploadFile().getName() + "\"\r\n");
                 request.writeBytes("\r\n");
+            }
+
+            if (!postBody.equals("")) {
+                con.setDoOutput(true);
+                // Send post request
+                final BufferedOutputStream outputStream = new BufferedOutputStream(con.getOutputStream());
+                writeAll(postBody, outputStream, Charset.defaultCharset());
+                outputStream.close();
             }
 
             InputStream inputStream = new BufferedInputStream(con.getInputStream());
