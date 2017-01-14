@@ -1,11 +1,17 @@
 package be.maximvdw.modules.http;
 
+import sun.misc.IOUtils;
+import sun.nio.ch.IOUtil;
+
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,13 +80,6 @@ public class HttpRequest {
     public HttpResponse execute() throws IOException {
         HttpURLConnection con = null;
         try {
-            if (this.uploadFile != null) {
-                con.setRequestProperty("Connection", "Keep-Alive");
-                con.setRequestProperty("Cache-Control", "no-cache");
-                con.setRequestProperty(
-                        "Content-Type", "multipart/form-data;boundary=*****");
-            }
-
             if (url.getProtocol().toLowerCase().equals("https")) {
                 con = (HttpsURLConnection) url.openConnection();
             } else {
@@ -95,6 +94,13 @@ public class HttpRequest {
             }
 
             if (this.uploadFile != null){
+                con.setUseCaches(false);
+                con.setDoOutput(true);
+                con.setRequestProperty("Connection", "Keep-Alive");
+                con.setRequestProperty("Cache-Control", "no-cache");
+                con.setRequestProperty(
+                        "Content-Type", "multipart/form-data;boundary=*****");
+
                 DataOutputStream request = new DataOutputStream(
                         con.getOutputStream());
 
@@ -103,8 +109,14 @@ public class HttpRequest {
                         this.getUploadFileName() + "\";filename=\"" +
                         this.getUploadFile().getName() + "\"\r\n");
                 request.writeBytes("\r\n");
+                Path path = Paths.get(getUploadFile().getAbsolutePath());
+                byte[] data = Files.readAllBytes(path);
+                request.write(data);
+                request.writeBytes("\r\n");
+                request.writeBytes("--*****--\r\n");
+                request.flush();
+                request.close();
             }
-
             if (!postBody.equals("")) {
                 con.setDoOutput(true);
                 // Send post request
