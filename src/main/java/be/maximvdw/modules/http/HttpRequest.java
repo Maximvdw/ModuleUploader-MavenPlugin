@@ -71,7 +71,7 @@ public class HttpRequest {
         return this;
     }
 
-    public HttpRequest withFile(String name,File file){
+    public HttpRequest withFile(String name, File file) {
         this.uploadFile = file;
         this.uploadFileName = name;
         return this;
@@ -88,7 +88,7 @@ public class HttpRequest {
 
             // Set request method
             con.setRequestMethod(httpMethod.name());
-            if (httpMethod == HttpMethod.POST){
+            if (httpMethod == HttpMethod.POST) {
                 con.setDoOutput(true);
             }
 
@@ -96,38 +96,34 @@ public class HttpRequest {
                 con.setRequestProperty(header.getKey(), header.getValue());
             }
 
-            if (this.uploadFile != null){
-                try {
-                    con.setUseCaches(false);
-                    con.setRequestProperty("Connection", "Keep-Alive");
-                    con.setRequestProperty("Cache-Control", "no-cache");
-                    con.setRequestProperty(
-                            "Content-Type", "multipart/form-data;boundary=*****");
-
-                    DataOutputStream request = new DataOutputStream(
-                            con.getOutputStream());
-
-                    request.writeBytes("--*****\r\n");
-                    request.writeBytes("Content-Disposition: form-data; name=\"" +
-                            this.getUploadFileName() + "\";filename=\"" +
-                            this.getUploadFile().getName() + "\"\r\n");
-                    request.writeBytes("\r\n");
-                    Path path = Paths.get(getUploadFile().getAbsolutePath());
-                    byte[] data = Files.readAllBytes(path);
-                    request.write(data);
-                    request.writeBytes("\r\n");
-                    request.writeBytes("--*****--\r\n");
-                    request.flush();
-                    request.close();
-                }catch (Exception ex){
-                    ex.printStackTrace();
-                }
-            }
             if (!postBody.equals("")) {
                 // Send post request
                 final BufferedOutputStream outputStream = new BufferedOutputStream(con.getOutputStream());
                 writeAll(postBody, outputStream, Charset.defaultCharset());
                 outputStream.close();
+            }
+            if (this.uploadFile != null) {
+                con.setUseCaches(false);
+                con.setRequestProperty("Connection", "Keep-Alive");
+                con.setRequestProperty("Cache-Control", "no-cache");
+                con.setRequestProperty(
+                        "Content-Type", "multipart/form-data;boundary=*****");
+
+                DataOutputStream request = new DataOutputStream(
+                        con.getOutputStream());
+
+                request.writeBytes("--*****\r\n");
+                request.writeBytes("Content-Disposition: form-data; name=\"" +
+                        this.getUploadFileName() + "\";filename=\"" +
+                        this.getUploadFile().getName() + "\"\r\n");
+                request.writeBytes("\r\n");
+                Path path = Paths.get(getUploadFile().getAbsolutePath());
+                byte[] data = Files.readAllBytes(path);
+                request.write(data);
+                request.writeBytes("\r\n");
+                request.writeBytes("--*****--\r\n");
+                request.flush();
+                request.close();
             }
 
             InputStream inputStream = new BufferedInputStream(con.getInputStream());

@@ -76,7 +76,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
     public Long getModuleId() {
         try {
             String url = urlApi + "/module/" + projectId + "/fromName/" + URLEncoder.encode(moduleName, "UTF-8");
-            getLog().debug("Sending GET request to: " + url);
+            getLog().info("Sending GET request to: " + url);
             HttpResponse response = new HttpRequest(url)
                     .execute();
             JSONParser parser = new JSONParser();
@@ -93,7 +93,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
     public Long createModule() {
         try {
             String url = urlApi + "/module/" + projectId + "/create";
-            getLog().debug("Sending POST request to: " + url);
+            getLog().info("Sending POST request to: " + url);
             HttpResponse response = new HttpRequest(url)
                     .post("name", moduleName)
                     .post("author", moduleAuthor)
@@ -115,7 +115,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
     public boolean uploadFile(long moduleId, File file) {
         try {
             String url = urlApi + "/module/" + projectId + "/" + moduleId + "/update";
-            getLog().debug("Sending POST request to: " + url);
+            getLog().info("Sending POST request to: " + url);
             HttpResponse response = new HttpRequest(url)
                     .post("version", moduleVersion)
                     .authorization(accessToken)
