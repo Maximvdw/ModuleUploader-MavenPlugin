@@ -74,12 +74,13 @@ public class ModuleUploaderMojo extends AbstractMojo {
     public int getModuleId() {
         try {
             String url = urlApi + "/modules/" + projectId + "/fromName/" + URLEncoder.encode(moduleName, "UTF-8");
+            getLog().debug("Sending GET request to: " + url);
             HttpResponse response = new HttpRequest(url)
                     .execute();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
-            if (responseJson.containsKey("module")){
-                return (int) ((JSONObject)responseJson.get("module")).get("id");
+            if (responseJson.containsKey("module")) {
+                return (int) ((JSONObject) responseJson.get("module")).get("id");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -90,6 +91,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
     public int createModule() {
         try {
             String url = urlApi + "/modules/" + projectId + "/create";
+            getLog().debug("Sending POST request to: " + url);
             HttpResponse response = new HttpRequest(url)
                     .post("name", moduleName)
                     .post("author", moduleAuthor)
@@ -99,8 +101,8 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     .execute();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
-            if (responseJson.containsKey("module")){
-                return (int) ((JSONObject)responseJson.get("module")).get("id");
+            if (responseJson.containsKey("module")) {
+                return (int) ((JSONObject) responseJson.get("module")).get("id");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
