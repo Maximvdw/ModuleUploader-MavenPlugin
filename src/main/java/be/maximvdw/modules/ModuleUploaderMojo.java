@@ -114,10 +114,9 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
     public boolean uploadFile(long moduleId, File file) {
         try {
-            String url = urlApi + "/module/" + projectId + "/" + moduleId + "/update";
+            String url = urlApi + "/module/" + projectId + "/" + moduleId + "/" + moduleVersion + "/uploadUpdate";
             getLog().info("Sending POST request to: " + url);
             HttpResponse response = new HttpRequest(url)
-                    .post("version", moduleVersion)
                     .authorization(accessToken)
                     .withFile("file", file)
                     .method(HttpMethod.POST)
