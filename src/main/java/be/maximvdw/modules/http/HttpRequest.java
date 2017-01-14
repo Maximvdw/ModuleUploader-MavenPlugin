@@ -88,6 +88,9 @@ public class HttpRequest {
 
             // Set request method
             con.setRequestMethod(httpMethod.name());
+            if (httpMethod == HttpMethod.POST){
+                con.setDoOutput(true);
+            }
 
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 con.setRequestProperty(header.getKey(), header.getValue());
@@ -96,7 +99,6 @@ public class HttpRequest {
             if (this.uploadFile != null){
                 try {
                     con.setUseCaches(false);
-                    con.setDoOutput(true);
                     con.setRequestProperty("Connection", "Keep-Alive");
                     con.setRequestProperty("Cache-Control", "no-cache");
                     con.setRequestProperty(
@@ -122,7 +124,6 @@ public class HttpRequest {
                 }
             }
             if (!postBody.equals("")) {
-                con.setDoOutput(true);
                 // Send post request
                 final BufferedOutputStream outputStream = new BufferedOutputStream(con.getOutputStream());
                 writeAll(postBody, outputStream, Charset.defaultCharset());
