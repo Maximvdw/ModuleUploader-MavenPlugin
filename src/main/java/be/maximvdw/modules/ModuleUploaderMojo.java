@@ -50,13 +50,13 @@ public class ModuleUploaderMojo extends AbstractMojo {
     @Parameter(property = "moduleId")
     String moduleId;
 
-    @Parameter(property = "moduleAuthor", required = true)
+    @Parameter(property = "moduleAuthor", required = false)
     String moduleAuthor;
 
-    @Parameter(property = "moduleDescription", required = true)
+    @Parameter(property = "moduleDescription", required = false)
     String moduleDescription;
 
-    @Parameter(property = "moduleVersion", required = true)
+    @Parameter(property = "moduleVersion", required = false)
     String moduleVersion;
 
     @Parameter(property = "permalink")
