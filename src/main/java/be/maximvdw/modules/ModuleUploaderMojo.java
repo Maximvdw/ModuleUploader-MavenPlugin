@@ -137,6 +137,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     .data("author", moduleAuthor)
                     .data("description", moduleDescription)
                     .header("Authorization", accessToken);
+
             if (screenshots != null) {
                 for (String screenshot : screenshots) {
                     connection.data("screenshots[]", screenshot);
@@ -170,12 +171,14 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     .data("changes", "test")
                     .data("file", file.getName(), new FileInputStream(file))
                     .header("Authorization", accessToken);
+
             if (constraints != null){
                 for (Map.Entry<Object,Object> prop : constraints.entrySet()){
                     String data = URLEncoder.encode(prop.getKey() + "=" + prop.getValue(),"UTF-8");
                     connection.data("constraints[]",data);
                 }
             }
+
             Document document = connection.post();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
