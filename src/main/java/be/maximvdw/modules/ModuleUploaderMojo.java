@@ -11,9 +11,9 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Properties;
 
@@ -74,6 +74,22 @@ public class ModuleUploaderMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         getLog().info("MVdW-Software Module Uploader");
         getLog().info("Using API: " + urlApi);
+
+        if (accessToken.startsWith("file:")) {
+            String filePath = accessToken.substring("file:".length());
+            File accessTokenFile = new File(filePath);
+            if (accessTokenFile.exists()) {
+                try (
+                        InputStream fis = new FileInputStream(accessTokenFile);
+                        InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+                        BufferedReader br = new BufferedReader(isr);
+                ) {
+                    accessToken = br.readLine();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
         if (projectName != null) {
             getLog().info("Getting project id from name ...");
