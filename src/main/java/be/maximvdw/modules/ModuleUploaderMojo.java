@@ -1,8 +1,5 @@
 package be.maximvdw.modules;
 
-import be.maximvdw.modules.http.HttpMethod;
-import be.maximvdw.modules.http.HttpRequest;
-import be.maximvdw.modules.http.HttpResponse;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -10,8 +7,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.net.URLEncoder;
 
 @Mojo(name = "update")
@@ -20,7 +20,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
     /**
      * URL of the Modules API
      */
-    @Parameter(property = "urlApi", required = false, defaultValue = "http://modules.mvdw-software.com/api/v1")
+    @Parameter(property = "urlApi", defaultValue = "http://modules.mvdw-software.com/api/v1")
     String urlApi;
 
     /**
@@ -29,19 +29,25 @@ public class ModuleUploaderMojo extends AbstractMojo {
     @Parameter(property = "accessToken", required = true)
     String accessToken;
 
-    @Parameter(property = "projectId", required = true)
-    int projectId;
+    @Parameter(property = "projectId")
+    String projectId;
 
-    @Parameter(property = "moduleName", required = true)
+    @Parameter(property = "projectName")
+    String projectName;
+
+    @Parameter(property = "moduleName")
     String moduleName;
 
-    @Parameter(property = "moduleAuthor", required = true)
+    @Parameter(property = "moduleId")
+    String moduleId;
+
+    @Parameter(property = "moduleAuthor")
     String moduleAuthor;
 
-    @Parameter(property = "moduleDescription", required = true)
+    @Parameter(property = "moduleDescription")
     String moduleDescription;
 
-    @Parameter(property = "moduleVersion", required = true)
+    @Parameter(property = "moduleVersion")
     String moduleVersion;
 
     /**
@@ -53,76 +59,93 @@ public class ModuleUploaderMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         getLog().info("MVdW-Software Module Uploader");
         getLog().info("Using API: " + urlApi);
-        getLog().info("Project ID: " + projectId);
-        getLog().info("Module name: " + moduleName);
-        getLog().info("Module author: " + moduleAuthor);
-        getLog().info("Module description: " + moduleDescription);
-        getLog().info("Module version: " + moduleVersion);
+
+        if (projectName != null) {
+            getLog().info("Getting project id from name ...");
+            projectId = getProjectId();
+        }
 
         getLog().info("Getting module id from name ...");
-        long moduleId = getModuleId();
-        if (moduleId == -1) {
+        moduleId = getModuleId();
+        if (moduleId == null) {
             getLog().info("Creating a new module!");
             moduleId = createModule();
         }
         getLog().info("Module id: " + moduleId);
 
         File projectFile = artifact.getFile();
-        if (uploadFile(moduleId,projectFile)){
+        if (uploadFile(moduleId, projectFile)) {
             getLog().info("Module upload success!");
         }
     }
 
-    public Long getModuleId() {
+    public String getProjectId() {
+        try {
+            String url = urlApi + "/project/fromName/" + URLEncoder.encode(projectName, "UTF-8");
+            getLog().info("Sending GET request to: " + url);
+            Document document = Jsoup.connect(url)
+                    .get();
+            JSONParser parser = new JSONParser();
+            JSONObject responseJson = (JSONObject) parser.parse(document.text());
+            if (responseJson.containsKey("module")) {
+                return (String) ((JSONObject) responseJson.get("module")).get("id");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public String getModuleId() {
         try {
             String url = urlApi + "/module/" + projectId + "/fromName/" + URLEncoder.encode(moduleName, "UTF-8");
             getLog().info("Sending GET request to: " + url);
-            HttpResponse response = new HttpRequest(url)
-                    .execute();
+            Document document = Jsoup.connect(url)
+                    .get();
             JSONParser parser = new JSONParser();
-            JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
+            JSONObject responseJson = (JSONObject) parser.parse(document.text());
             if (responseJson.containsKey("module")) {
-                return (Long) ((JSONObject) responseJson.get("module")).get("id");
+                return (String) ((JSONObject) responseJson.get("module")).get("id");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return -1L;
+        return null;
     }
 
-    public Long createModule() {
+    public String createModule() {
         try {
-            String url = urlApi + "/module/" + projectId + "/create";
+            String url = urlApi + "/project/" + projectId + "/createModule";
             getLog().info("Sending POST request to: " + url);
-            HttpResponse response = new HttpRequest(url)
-                    .post("name", moduleName)
-                    .post("author", moduleAuthor)
-                    .post("description", moduleDescription)
-                    .authorization(accessToken)
-                    .method(HttpMethod.POST)
-                    .execute();
+            Document document = Jsoup.connect(url)
+                    .data("name", moduleName)
+                    .data("author", moduleAuthor)
+                    .data("description", moduleDescription)
+                    .header("Authorization",accessToken)
+                    .post();
             JSONParser parser = new JSONParser();
-            JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
+            JSONObject responseJson = (JSONObject) parser.parse(document.text());
             if (responseJson.containsKey("module")) {
-                return (Long) ((JSONObject) responseJson.get("module")).get("id");
+                return (String) ((JSONObject) responseJson.get("module")).get("id");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return -1L;
+        return null;
     }
 
-    public boolean uploadFile(long moduleId, File file) {
+    public boolean uploadFile(String moduleId, File file) {
         try {
-            String url = urlApi + "/module/" + projectId + "/" + moduleId + "/" + moduleVersion + "/uploadUpdate";
+            String url = urlApi + "/module/" + moduleId + "/uploadUpdate";
             getLog().info("Sending POST request to: " + url);
-            HttpResponse response = new HttpRequest(url)
-                    .authorization(accessToken)
-                    .withFile("file", file)
-                    .method(HttpMethod.POST)
-                    .execute();
+            Document document = Jsoup.connect(url)
+                    .data("version", moduleVersion)
+                    .data("changes", "test")
+                    .data("file",file.getName(),new FileInputStream(file))
+                    .header("Authorization",accessToken)
+                    .post();
             JSONParser parser = new JSONParser();
-            JSONObject responseJson = (JSONObject) parser.parse(response.getSource());
+            JSONObject responseJson = (JSONObject) parser.parse(document.text());
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
