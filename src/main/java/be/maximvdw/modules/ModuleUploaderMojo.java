@@ -89,7 +89,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
             URL[] urls = {new URL("jar:file:" + projectFile.getPath() + "!/")};
 
-            ClassLoader cl = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
+            ClassLoader cl = URLClassLoader.newInstance(urls);
             while (e.hasMoreElements()) {
                 JarEntry je = e.nextElement();
                 if (je.isDirectory() || !je.getName().endsWith(".class")) {
