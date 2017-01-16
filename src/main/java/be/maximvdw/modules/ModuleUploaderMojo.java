@@ -142,9 +142,11 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     .data("name", moduleName)
                     .data("author", moduleAuthor)
                     .data("description", moduleDescription)
-                    .data("permalink",permalink)
                     .header("Authorization", accessToken);
 
+            if (permalink != null) {
+                connection.data("permalink", permalink);
+            }
             if (screenshots != null) {
                 for (String screenshot : screenshots) {
                     connection.data("screenshots[]", screenshot);
@@ -178,12 +180,14 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     .data("name", moduleName)
                     .data("author", moduleAuthor)
                     .data("description", moduleDescription)
-                    .data("permalink",permalink)
                     .data("version", moduleVersion)
                     .data("changes", "test")
                     .data("file", file.getName(), new FileInputStream(file))
                     .header("Authorization", accessToken);
 
+            if (permalink != null) {
+                connection.data("permalink", permalink);
+            }
             if (screenshots != null) {
                 for (String screenshot : screenshots) {
                     connection.data("screenshots[]", screenshot);
@@ -194,10 +198,10 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     connection.data("videos[]", video);
                 }
             }
-            if (constraints != null){
-                for (Map.Entry<Object,Object> prop : constraints.entrySet()){
-                    String data = URLEncoder.encode(prop.getKey() + "=" + prop.getValue(),"UTF-8");
-                    connection.data("constraints[]",data);
+            if (constraints != null) {
+                for (Map.Entry<Object, Object> prop : constraints.entrySet()) {
+                    String data = URLEncoder.encode(prop.getKey() + "=" + prop.getValue(), "UTF-8");
+                    connection.data("constraints[]", data);
                 }
             }
 
