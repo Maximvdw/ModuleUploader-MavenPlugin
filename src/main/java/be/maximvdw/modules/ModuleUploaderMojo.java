@@ -7,12 +7,15 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URLEncoder;
+import java.util.Map;
+import java.util.Properties;
 
 @Mojo(name = "update")
 public class ModuleUploaderMojo extends AbstractMojo {
@@ -41,14 +44,23 @@ public class ModuleUploaderMojo extends AbstractMojo {
     @Parameter(property = "moduleId")
     String moduleId;
 
-    @Parameter(property = "moduleAuthor")
+    @Parameter(property = "moduleAuthor", required = true)
     String moduleAuthor;
 
-    @Parameter(property = "moduleDescription")
+    @Parameter(property = "moduleDescription", required = true)
     String moduleDescription;
 
-    @Parameter(property = "moduleVersion")
+    @Parameter(property = "moduleVersion", required = true)
     String moduleVersion;
+
+    @Parameter(property = "screenshots")
+    String[] screenshots;
+
+    @Parameter(property = "videos")
+    String[] videos;
+
+    @Parameter(property = "constraints")
+    Properties constraints;
 
     /**
      * Project Artifact.
@@ -119,13 +131,24 @@ public class ModuleUploaderMojo extends AbstractMojo {
         try {
             String url = urlApi + "/project/" + projectId + "/createModule";
             getLog().info("Sending POST request to: " + url);
-            Document document = Jsoup.connect(url)
+            Connection connection = Jsoup.connect(url)
                     .ignoreContentType(true)
                     .data("name", moduleName)
                     .data("author", moduleAuthor)
                     .data("description", moduleDescription)
-                    .header("Authorization",accessToken)
-                    .post();
+                    .header("Authorization", accessToken);
+            if (screenshots != null) {
+                for (String screenshot : screenshots) {
+                    connection.data("screenshots[]", screenshot);
+                }
+            }
+            if (videos != null) {
+                for (String video : videos) {
+                    connection.data("videos[]", video);
+                }
+            }
+
+            Document document = connection.post();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
             if (responseJson.containsKey("module")) {
@@ -141,13 +164,19 @@ public class ModuleUploaderMojo extends AbstractMojo {
         try {
             String url = urlApi + "/module/" + moduleId + "/update";
             getLog().info("Sending POST request to: " + url);
-            Document document = Jsoup.connect(url)
+            Connection connection = Jsoup.connect(url)
                     .ignoreContentType(true)
                     .data("version", moduleVersion)
                     .data("changes", "test")
-                    .data("file",file.getName(),new FileInputStream(file))
-                    .header("Authorization",accessToken)
-                    .post();
+                    .data("file", file.getName(), new FileInputStream(file))
+                    .header("Authorization", accessToken);
+            if (constraints != null){
+                for (Map.Entry<Object,Object> prop : constraints.entrySet()){
+                    String data = URLEncoder.encode(prop.getKey() + "=" + prop.getValue(),"UTF-8");
+                    connection.data("constraints[]",data);
+                }
+            }
+            Document document = connection.post();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
             return true;
