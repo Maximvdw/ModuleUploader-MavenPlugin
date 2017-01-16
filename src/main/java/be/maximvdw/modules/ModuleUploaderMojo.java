@@ -88,8 +88,8 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     .get();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
-            if (responseJson.containsKey("module")) {
-                return (String) ((JSONObject) responseJson.get("module")).get("id");
+            if (responseJson.containsKey("project")) {
+                return (String) ((JSONObject) responseJson.get("project")).get("id");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -139,7 +139,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
     public boolean uploadFile(String moduleId, File file) {
         try {
-            String url = urlApi + "/module/" + moduleId + "/uploadUpdate";
+            String url = urlApi + "/module/" + moduleId + "/update";
             getLog().info("Sending POST request to: " + url);
             Document document = Jsoup.connect(url)
                     .ignoreContentType(true)
