@@ -84,6 +84,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
             String url = urlApi + "/project/fromName/" + URLEncoder.encode(projectName, "UTF-8");
             getLog().info("Sending GET request to: " + url);
             Document document = Jsoup.connect(url)
+                    .ignoreContentType(true)
                     .get();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
@@ -101,6 +102,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
             String url = urlApi + "/module/" + projectId + "/fromName/" + URLEncoder.encode(moduleName, "UTF-8");
             getLog().info("Sending GET request to: " + url);
             Document document = Jsoup.connect(url)
+                    .ignoreContentType(true)
                     .get();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
@@ -118,6 +120,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
             String url = urlApi + "/project/" + projectId + "/createModule";
             getLog().info("Sending POST request to: " + url);
             Document document = Jsoup.connect(url)
+                    .ignoreContentType(true)
                     .data("name", moduleName)
                     .data("author", moduleAuthor)
                     .data("description", moduleDescription)
@@ -139,6 +142,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
             String url = urlApi + "/module/" + moduleId + "/uploadUpdate";
             getLog().info("Sending POST request to: " + url);
             Document document = Jsoup.connect(url)
+                    .ignoreContentType(true)
                     .data("version", moduleVersion)
                     .data("changes", "test")
                     .data("file",file.getName(),new FileInputStream(file))
