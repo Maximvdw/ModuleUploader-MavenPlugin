@@ -1,5 +1,7 @@
 package be.maximvdw.modules;
 
+import be.maximvdw.qaplugin.api.AIModule;
+import be.maximvdw.qaplugin.api.annotations.*;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -12,10 +14,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.*;
+import java.lang.annotation.Annotation;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 @Mojo(name = "update")
 public class ModuleUploaderMojo extends AbstractMojo {
@@ -75,6 +81,62 @@ public class ModuleUploaderMojo extends AbstractMojo {
         getLog().info("MVdW-Software Module Uploader");
         getLog().info("Using API: " + urlApi);
 
+        File projectFile = artifact.getFile();
+        // Scan file for information
+        try {
+            JarFile jarFile = new JarFile(projectFile);
+            Enumeration<JarEntry> e = jarFile.entries();
+
+            URL[] urls = {new URL("jar:file:" + projectFile.getPath() + "!/")};
+
+            ClassLoader cl = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
+            while (e.hasMoreElements()) {
+                JarEntry je = e.nextElement();
+                if (je.isDirectory() || !je.getName().endsWith(".class")) {
+                    continue;
+                }
+
+                String className = je.getName().substring(0, je.getName().length() - 6);
+                className = className.replace('/', '.');
+                Class<?> c = Class.forName(className, true, cl);
+
+                if (AIModule.class.isAssignableFrom(c)) {
+                    Class<? extends AIModule> componentClass = c.asSubclass(AIModule.class);
+                    // Load the module constraints
+                    Annotation[] annotations = componentClass.getAnnotations();
+                    for (Annotation annotation : annotations) {
+                        if (annotation instanceof ModuleConstraint) {
+                            ModuleConstraint constraint = (ModuleConstraint) annotation;
+                            constraints.put(constraint.type().name(), constraint.value());
+                        } else if (annotation instanceof ModuleConstraints) {
+                            ModuleConstraint[] subConstraints = ((ModuleConstraints) annotation).value();
+                            for (ModuleConstraint subConstraint : subConstraints) {
+                                constraints.put(subConstraint.type().name(), subConstraint.value());
+                            }
+                        } else if (annotation instanceof ModuleName) {
+                            moduleName = ((ModuleName) annotation).value();
+                        } else if (annotation instanceof ModuleVersion) {
+                            moduleVersion = ((ModuleVersion) annotation).value();
+                        } else if (annotation instanceof ModuleDescription) {
+                            moduleDescription = ((ModuleDescription) annotation).value();
+                        } else if (annotation instanceof ModuleAuthor) {
+                            moduleAuthor = ((ModuleAuthor) annotation).value();
+                        } else if (annotation instanceof ModulePermalink) {
+                            permalink = ((ModulePermalink) annotation).value();
+                        } else if (annotation instanceof ModuleScreenshots) {
+                            screenshots = ((ModuleScreenshots) annotation).value();
+                        } else if (annotation instanceof ModuleVideos) {
+                            videos = ((ModuleVideos) annotation).value();
+                        }
+                    }
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return;
+        }
+
         if (accessToken.startsWith("file:")) {
             String filePath = accessToken.substring("file:".length());
             File accessTokenFile = new File(filePath);
@@ -104,7 +166,6 @@ public class ModuleUploaderMojo extends AbstractMojo {
         }
         getLog().info("Module id: " + moduleId);
 
-        File projectFile = artifact.getFile();
         if (uploadFile(moduleId, projectFile)) {
             getLog().info("Module upload success!");
         }
