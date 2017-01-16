@@ -53,6 +53,9 @@ public class ModuleUploaderMojo extends AbstractMojo {
     @Parameter(property = "moduleVersion", required = true)
     String moduleVersion;
 
+    @Parameter(property = "permalink")
+    String permalink;
+
     @Parameter(property = "screenshots")
     String[] screenshots;
 
@@ -97,6 +100,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
             getLog().info("Sending GET request to: " + url);
             Document document = Jsoup.connect(url)
                     .ignoreContentType(true)
+                    .ignoreHttpErrors(true)
                     .get();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
@@ -115,6 +119,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
             getLog().info("Sending GET request to: " + url);
             Document document = Jsoup.connect(url)
                     .ignoreContentType(true)
+                    .ignoreHttpErrors(true)
                     .get();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
@@ -133,9 +138,11 @@ public class ModuleUploaderMojo extends AbstractMojo {
             getLog().info("Sending POST request to: " + url);
             Connection connection = Jsoup.connect(url)
                     .ignoreContentType(true)
+                    .ignoreHttpErrors(true)
                     .data("name", moduleName)
                     .data("author", moduleAuthor)
                     .data("description", moduleDescription)
+                    .data("permalink",permalink)
                     .header("Authorization", accessToken);
 
             if (screenshots != null) {
@@ -167,11 +174,26 @@ public class ModuleUploaderMojo extends AbstractMojo {
             getLog().info("Sending POST request to: " + url);
             Connection connection = Jsoup.connect(url)
                     .ignoreContentType(true)
+                    .ignoreHttpErrors(true)
+                    .data("name", moduleName)
+                    .data("author", moduleAuthor)
+                    .data("description", moduleDescription)
+                    .data("permalink",permalink)
                     .data("version", moduleVersion)
                     .data("changes", "test")
                     .data("file", file.getName(), new FileInputStream(file))
                     .header("Authorization", accessToken);
 
+            if (screenshots != null) {
+                for (String screenshot : screenshots) {
+                    connection.data("screenshots[]", screenshot);
+                }
+            }
+            if (videos != null) {
+                for (String video : videos) {
+                    connection.data("videos[]", video);
+                }
+            }
             if (constraints != null){
                 for (Map.Entry<Object,Object> prop : constraints.entrySet()){
                     String data = URLEncoder.encode(prop.getKey() + "=" + prop.getValue(),"UTF-8");
