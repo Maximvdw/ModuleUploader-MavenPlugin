@@ -89,7 +89,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
             URL[] urls = {new URL("jar:file:" + projectFile.getPath() + "!/")};
 
-            ClassLoader cl = URLClassLoader.newInstance(urls,getClass().getClassLoader());
+            ClassLoader cl = URLClassLoader.newInstance(urls,getClass().getClassLoader().getParent());
             while (e.hasMoreElements()) {
                 JarEntry je = e.nextElement();
                 if (je.isDirectory() || !je.getName().endsWith(".class")) {
@@ -132,7 +132,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     break;
                 }
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             ex.printStackTrace();
             return;
         }
