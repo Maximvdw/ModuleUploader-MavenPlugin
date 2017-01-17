@@ -24,6 +24,9 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+/**
+ * @requiresDependencyResolution
+ */
 @Mojo(name = "update")
 public class ModuleUploaderMojo extends AbstractMojo {
 
