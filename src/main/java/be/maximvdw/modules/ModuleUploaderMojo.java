@@ -7,6 +7,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.jsoup.Connection;
@@ -77,6 +78,13 @@ public class ModuleUploaderMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.artifact}", readonly = true, required = true)
     private Artifact artifact;
 
+    /**
+     * @parameter expression="${project}"
+     * @required
+     * @readonly
+     */
+    private MavenProject project;
+
     public void execute() throws MojoExecutionException {
         getLog().info("MVdW-Software Module Uploader");
         getLog().info("Using API: " + urlApi);
@@ -89,7 +97,14 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
             URL[] urls = {new URL("jar:file:" + projectFile.getPath() + "!/")};
 
-            ClassLoader cl = URLClassLoader.newInstance(urls,getClass().getClassLoader().getParent());
+            List runtimeClasspathElements = project.getRuntimeClasspathElements();
+            URL[] runtimeUrls = new URL[runtimeClasspathElements.size()];
+            for (int i = 0; i < runtimeClasspathElements.size(); i++) {
+                String element = (String) runtimeClasspathElements.get(i);
+                runtimeUrls[i] = new File(element).toURI().toURL();
+            }
+            URLClassLoader cl = new URLClassLoader(runtimeUrls,
+                    Thread.currentThread().getContextClassLoader());
             while (e.hasMoreElements()) {
                 JarEntry je = e.nextElement();
                 if (je.isDirectory() || !je.getName().endsWith(".class")) {
