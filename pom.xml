@@ -6,7 +6,7 @@
 
     <groupId>be.maximvdw</groupId>
     <artifactId>ModuleUploader</artifactId>
-    <version>1.5.2</version>
+    <version>1.5.3</version>
 
     <packaging>maven-plugin</packaging>
 

@@ -254,6 +254,10 @@ public class ModuleUploaderMojo extends AbstractMojo {
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
             if (responseJson.containsKey("module")) {
                 return (String) ((JSONObject) responseJson.get("module")).get("id");
+            }else{
+                if (responseJson.containsKey("error")){
+                    getLog().error("Error: " + responseJson.get("error"));
+                }
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -299,6 +303,10 @@ public class ModuleUploaderMojo extends AbstractMojo {
             Document document = connection.post();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
+            if (responseJson.containsKey("error")){
+                getLog().error("Error: " + responseJson.get("error"));
+                return false;
+            }
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
