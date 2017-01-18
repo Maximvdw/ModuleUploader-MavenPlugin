@@ -141,7 +141,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
                             videos = ((ModuleVideos) annotation).value();
                         }
                     }
-                    if (moduleName == null || !moduleName.equals("")) {
+                    if (moduleName != null) {
                         break;
                     }
                 }
