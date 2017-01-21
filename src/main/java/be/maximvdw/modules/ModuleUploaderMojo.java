@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-@Mojo(name = "update",requiresDependencyResolution = ResolutionScope.RUNTIME)
+@Mojo(name = "update", requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class ModuleUploaderMojo extends AbstractMojo {
 
     /**
@@ -72,6 +72,9 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
     @Parameter(property = "constraints")
     Properties constraints;
+
+    @Parameter(property = "changes", required = false)
+    String changes;
 
     /**
      * Project Artifact.
@@ -139,6 +142,16 @@ public class ModuleUploaderMojo extends AbstractMojo {
                             screenshots = ((ModuleScreenshots) annotation).value();
                         } else if (annotation instanceof ModuleVideos) {
                             videos = ((ModuleVideos) annotation).value();
+                        } else if (annotation instanceof ModuleVersionChange) {
+                            if (((ModuleVersionChange) annotation).version().equalsIgnoreCase(moduleVersion)) {
+                                changes = ((ModuleVersionChange) annotation).value();
+                            }
+                        } else if (annotation instanceof ModuleVersionChanges) {
+                            for (ModuleVersionChange change : ((ModuleVersionChanges) annotation).value()) {
+                                if (change.version().equalsIgnoreCase(moduleVersion)) {
+                                    changes = change.value();
+                                }
+                            }
                         }
                     }
                     if (moduleName != null) {
@@ -254,8 +267,8 @@ public class ModuleUploaderMojo extends AbstractMojo {
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
             if (responseJson.containsKey("module")) {
                 return (String) ((JSONObject) responseJson.get("module")).get("id");
-            }else{
-                if (responseJson.containsKey("error")){
+            } else {
+                if (responseJson.containsKey("error")) {
                     getLog().error("Error: " + responseJson.get("error"));
                 }
             }
@@ -276,10 +289,12 @@ public class ModuleUploaderMojo extends AbstractMojo {
                     .data("author", moduleAuthor)
                     .data("description", moduleDescription)
                     .data("version", moduleVersion)
-                    .data("changes", "test")
                     .data("file", file.getName(), new FileInputStream(file))
                     .header("Authorization", accessToken);
 
+            if (changes != null) {
+                connection.data("changes", changes);
+            }
             if (permalink != null) {
                 connection.data("permalink", permalink);
             }
@@ -303,7 +318,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
             Document document = connection.post();
             JSONParser parser = new JSONParser();
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
-            if (responseJson.containsKey("error")){
+            if (responseJson.containsKey("error")) {
                 getLog().error("Error: " + responseJson.get("error"));
                 return false;
             }
