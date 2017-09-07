@@ -317,6 +317,7 @@ public class ModuleUploaderMojo extends AbstractMojo {
 
             Document document = connection.post();
             JSONParser parser = new JSONParser();
+            getLog().info(document.text());
             JSONObject responseJson = (JSONObject) parser.parse(document.text());
             if (responseJson.containsKey("error")) {
                 getLog().error("Error: " + responseJson.get("error"));
